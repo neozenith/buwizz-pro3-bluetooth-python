@@ -9,6 +9,7 @@ BuWizz Pro 3 Lego controller python bluetooth library based on bleak
 - [User Guide](#user-guide)
 - [Publishing](#publishing)
 - [Contributing](#contributing)
+- [TODO](#todo)
 
 <!--TOC-->
 
@@ -44,3 +45,8 @@ However if you would like to contribute your changes back, then open a Pull Requ
 Once your changes are merged and published you can revert to the canonical version of `pip install`ing this package.
 
 If you're not sure how to make changes or _if_ you should sink the time and effort, then open an Issue instead and we can have a chat to triage the issue.
+
+
+# TODO
+ - Get `bleak` to talk to BuWizz controller https://github.com/hbldh/bleak/blob/master/examples/uart_service.py
+ - Get Sphinx docs to auto generate based on code API.
