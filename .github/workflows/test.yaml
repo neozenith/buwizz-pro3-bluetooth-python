@@ -1,0 +1,50 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Test Python Package
+
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
+  
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # Do not run on the top of the hour to reduce risk of getting dropped.
+    # Run on the 22nd of every month at 9:37am. 
+    # Monthly tests to ensure the tests still pass as dependencies may update.
+    - cron:  '37 9 22 * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          poetry config virtualenvs.create false
+          poetry install
+      - name: Linting, formatting, typechecking
+        run: |
+          poetry inv lint
+      - name: Test with pytest
+        run: |
+          poetry inv test
+      - name: Build package
+        run: poetry build
+
