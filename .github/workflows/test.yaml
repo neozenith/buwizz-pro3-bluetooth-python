@@ -41,10 +41,10 @@ jobs:
           poetry install
       - name: Linting, formatting, typechecking
         run: |
-          poetry inv lint
+          poetry run inv lint
       - name: Test with pytest
         run: |
-          poetry inv test
+          poetry run inv test
       - name: Build package
         run: poetry build
 
