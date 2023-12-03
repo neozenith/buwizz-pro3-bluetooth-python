@@ -1,5 +1,6 @@
 [tool.poetry]
-name = "buwizz-pro-bluetooth"
+# Intentionally long and specific name so BuWizz have rights to a more abstract concise named library
+name = "buwizz-pro3-bluetooth-python"
 version = "0.1.0"
 description = "BuWizz Pro 3 Lego controller python bluetooth library based on bleak"
 authors = ["Josh Peak <neozenith.dev@gmail.com>"]
