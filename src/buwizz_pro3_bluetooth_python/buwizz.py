@@ -10,7 +10,7 @@ from bleak.backends.scanner import AdvertisementData
 
 logger = logging.getLogger(__name__)
 AccelerometerReading = namedtuple("AccelerometerReading", ["x", "y", "z"])
-StatusFlags = namedtuple("StatusFlags", ["usb_connected", "battery_charging", "battery_level", "ble_long_phy", "error"])
+StatusFlags = namedtuple("StatusFlags", ["usb_connected", "battery_charging", "battery_level", "ble_long_phy", "motion_wakeup_enabled", "error"])
 PoweredUpMotorData = namedtuple("PoweredUpMotorData", ["motor_type", "velocity", "absolute_position", "position"])
 
 # Discovering BuWizz3 device
@@ -128,9 +128,14 @@ def notification_handler(characteristic: BleakGATTCharacteristic, data: bytearra
 def decode_accelerometer_bytes(data: bytearray) -> str:
     """Decode byte encoded version of accelerometer readings."""
     # (left-aligned 12-bit signed value, 0.488 mg/digit)
-    val = (ord(data) >> 4 & 0x07FF) * 0.488
+    raw = '{:>016b}'.format(ord(data))
+    reversed_raw = '{:>016b}'.format(int('{:016b}'.format((ord(data)))[::-1], 2))[4:]
+    val = int(reversed_raw, 2)
     # TODO: figure out how the the signedness works. Maybe just email BuWizz team?
-    return val * 0.488  # , f"{val:>016b}")
+    # TODO: Maybe make use of python stdlib function struct.unpack just like PyBricks does???
+    # https://docs.python.org/3/library/struct.html#struct-alignment
+    # TODO: Reverse engineering values from looking at raw value in App and then back on this console logs
+    return (round((val * 0.488 / 1000) - 1, 3) , raw, reversed_raw, f"{val:>012b}")
 
 
 def decode_battery_voltage(data: bytearray) -> float:
@@ -150,7 +155,7 @@ def decode_status_flags(data: bytearray) -> StatusFlags:
     5 Battery  charging  status  (1  -  battery  is  charging, 0 - battery is full or not charging)
     3-4 Battery  level  status  (0  -  empty,  motors  disabled;  1  -  low;  2  -  medium;  3  - full)
     2 BLE long range PHY enabled
-    1 unused
+    1 motion_wakeup_enabled
     0 error (overcurrent, overtemperature...).
     """
     return StatusFlags(
@@ -158,12 +163,26 @@ def decode_status_flags(data: bytearray) -> StatusFlags:
         battery_charging=bool(data >> 5 & 0x1),
         battery_level=int(data >> 3 & 0x3),
         ble_long_phy=bool(data >> 2 & 0x1),
+        motion_wakeup_enabled = bool(data >> 1 & 0x1),
         error=bool(data & 0x1),
     )
 
 
 def decode_poweredup_motor_data(data: bytearray) -> PoweredUpMotorData:
-    return PoweredUpMotorData(motor_type=data[0], velocity=data[1], absolute_position=data[2:3], position=data[4:])
+    """Decode Powered Up Motor spec data.
+    
+    # 22-53 PoweredUp motor data structure (4x)
+    # - Motor type (unsigned 8-bit)
+    # - Velocity (signed 8-bit)
+    # - Absolute position (unsigned 16-bit)
+    # - Position (unsigned 32-bit)
+    """
+    return PoweredUpMotorData(
+        motor_type=data[0], 
+        velocity=data[1], 
+        absolute_position=data[2:3], 
+        position=data[4:7],
+    )
 
 
 def handle_notify_device_status_report(data: bytearray) -> AccelerometerReading:
@@ -173,7 +192,7 @@ def handle_notify_device_status_report(data: bytearray) -> AccelerometerReading:
         command=data[0],
         status_flags=decode_status_flags(data[1]),
         battery_voltage=decode_battery_voltage(data[2]),
-        motor_currents=data[3:8],
+        motor_currents=[b * 0.015 for b in data[3:9]],
         microcontroller_temperature=data[9],
         accelerometer=AccelerometerReading(
             x=decode_accelerometer_bytes(data[10:11]),
