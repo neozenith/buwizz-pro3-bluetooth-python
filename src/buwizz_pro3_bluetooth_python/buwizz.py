@@ -1,5 +1,17 @@
 # Standard Library
-from dataclasses import dataclass
+import logging
+from collections import namedtuple
+from dataclasses import KW_ONLY, dataclass
+
+# Third Party
+from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
+
+logger = logging.getLogger(__name__)
+AccelerometerReading = namedtuple("AccelerometerReading", ["x", "y", "z"])
+StatusFlags = namedtuple("StatusFlags", ["usb_connected", "battery_charging", "battery_level", "ble_long_phy", "error"])
+PoweredUpMotorData = namedtuple("PoweredUpMotorData", ["motor_type", "velocity", "absolute_position", "position"])
 
 # Discovering BuWizz3 device
 #
@@ -36,11 +48,7 @@ BUWIZZ_CHAR_UUID_UART_CH4 = "50053904-74fb-4481-88b3-9919b1676e93"
 
 # https://buwizz.com/BuWizz_3.0_API_3.6_web.pdf
 
-COMMANDS = {
-    0x20: "Set Device Name",
-    # TODO: The rest of these...
-    0x36: "Set LED Status",
-}
+BUWIZZ_CMD_DISPLAY_STATUS_REPORT = 0x01
 
 
 @dataclass
@@ -81,9 +89,101 @@ class BuwizzDeviceStatusReport:
     # - PID output (float)
     # - Integrator state (signed 8-bit int)
     # - Motor output (signed 8-bit int)
-    ...
+    _: KW_ONLY
+
+    command: bytearray
+    status_flags: bytearray
+    battery_voltage: float
+    motor_currents: bytearray
+    microcontroller_temperature: bytearray
+    accelerometer: tuple[bytearray]
+    bootloader: bytearray
+    battery_charge_current: bytearray
+    poweredup_motor_data_a: bytearray
+    poweredup_motor_data_b: bytearray
+    poweredup_motor_data_c: bytearray
+    poweredup_motor_data_d: bytearray
 
 
-def handle_notify_device_status_report(data: bytearray) -> BuwizzDeviceStatusReport:
-    """Decode byte array data into Device Report."""
-    return BuwizzDeviceStatusReport()
+def match_buwizz_uuid(device: BLEDevice, adv: AdvertisementData) -> bool:
+    # This assumes that the device includes the UART service UUID in the
+    # advertising data. This test may need to be adjusted depending on the
+    # actual advertising data supplied by the device.
+    logger.info(f"match_uuid {adv}")
+    if BUWIZZ_SERVICE_UUID.lower() in adv.service_uuids:
+        return True
+
+    return False
+
+
+def notification_handler(characteristic: BleakGATTCharacteristic, data: bytearray) -> None:
+    """Simple notification handler which prints the data received."""
+    command_code = data[0]
+    if command_code == BUWIZZ_CMD_DISPLAY_STATUS_REPORT:
+        logger.info(handle_notify_device_status_report(data))
+    else:
+        logger.info("%s: %r, %s", characteristic.uuid, data, command_code)
+
+
+def decode_accelerometer_bytes(data: bytearray) -> str:
+    """Decode byte encoded version of accelerometer readings."""
+    # (left-aligned 12-bit signed value, 0.488 mg/digit)
+    val = (ord(data) >> 4 & 0x07FF) * 0.488
+    # TODO: figure out how the the signedness works. Maybe just email BuWizz team?
+    return val * 0.488  # , f"{val:>016b}")
+
+
+def decode_battery_voltage(data: bytearray) -> float:
+    """Decode byte value into real battery voltage.
+
+    Battery voltage (9 V + value * 0,05 V) - range 9,00 V – 15,35 V
+    """
+    return 9.0 + int(data) * 0.05
+
+
+def decode_status_flags(data: bytearray) -> StatusFlags:
+    """Decode byte encoded version of status flags.
+
+    bit description
+    7 unused
+    6 USB connection status (1 - cable connected)
+    5 Battery  charging  status  (1  -  battery  is  charging, 0 - battery is full or not charging)
+    3-4 Battery  level  status  (0  -  empty,  motors  disabled;  1  -  low;  2  -  medium;  3  - full)
+    2 BLE long range PHY enabled
+    1 unused
+    0 error (overcurrent, overtemperature...).
+    """
+    return StatusFlags(
+        usb_connected=bool(data >> 6 & 0x1),
+        battery_charging=bool(data >> 5 & 0x1),
+        battery_level=int(data >> 3 & 0x3),
+        ble_long_phy=bool(data >> 2 & 0x1),
+        error=bool(data & 0x1),
+    )
+
+
+def decode_poweredup_motor_data(data: bytearray) -> PoweredUpMotorData:
+    return PoweredUpMotorData(motor_type=data[0], velocity=data[1], absolute_position=data[2:3], position=data[4:])
+
+
+def handle_notify_device_status_report(data: bytearray) -> AccelerometerReading:
+    """Decode byte array data into Device Status Report."""
+    # TODO: Decode bytes into usable values.
+    return BuwizzDeviceStatusReport(
+        command=data[0],
+        status_flags=decode_status_flags(data[1]),
+        battery_voltage=decode_battery_voltage(data[2]),
+        motor_currents=data[3:8],
+        microcontroller_temperature=data[9],
+        accelerometer=AccelerometerReading(
+            x=decode_accelerometer_bytes(data[10:11]),
+            y=decode_accelerometer_bytes(data[12:13]),
+            z=decode_accelerometer_bytes(data[14:15]),
+        ),
+        bootloader=data[16:20],  # TODO
+        battery_charge_current=data[21],
+        poweredup_motor_data_a=decode_poweredup_motor_data(data[22:29]),
+        poweredup_motor_data_b=decode_poweredup_motor_data(data[30:37]),
+        poweredup_motor_data_c=decode_poweredup_motor_data(data[38:45]),
+        poweredup_motor_data_d=decode_poweredup_motor_data(data[46:53]),
+    )
