@@ -52,4 +52,5 @@ If you're not sure how to make changes or _if_ you should sink the time and effo
 
 # TODO
  - Get `bleak` to talk to BuWizz controller https://github.com/hbldh/bleak/blob/master/examples/uart_service.py
- - Get Sphinx docs to auto generate based on code API.
+ - Get MKDocs docs to auto generate based on code API.
+   - https://mkdocstrings.github.io/recipes/
