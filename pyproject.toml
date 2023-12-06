@@ -27,6 +27,10 @@ pytest-randomly = "^3.15.0"
 md-toc = "^8.2.2"
 isort = "^5.12.0"
 invoke = "^2.2.0"
+mkdocs = "^1.5.3"
+mkdocs-material = "^9.4.14"
+mkdocstrings = "^0.24.0"
+mkdocstrings-python = "^1.7.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -41,18 +45,16 @@ line-length = 120
 
 [tool.ruff.lint]
 select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
+    "E",# pycodestyle
+    "F", # Pyflakes
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "I", # isort
+    "PTH", # falek8-use-pathlib 
+    "TCH", # flake8-type-checking
+    "S", # flake8-bandit
+    "C90", #mccabe
 ]
 ignore = []
 
@@ -60,12 +62,26 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-import_heading_stdlib = "Standard Library"
-import_heading_firstparty = "Our Libraries"
-import_heading_thirdparty = "Third Party"
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+# multi-line-output = 3
+# import-heading-stdlib = "Standard Library"
+# import-heading-firstparty = "Our Libraries"
+# import-heading-thirdparty = "Third Party"
+
+# [tool.isort]
+# profile = "black"
+# multi_line_output = 3
+# import_heading_stdlib = "Standard Library"
+# import_heading_firstparty = "Our Libraries"
+# import_heading_thirdparty = "Third Party"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

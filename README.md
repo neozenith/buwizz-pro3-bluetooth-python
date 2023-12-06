@@ -2,6 +2,9 @@
 
 BuWizz Pro 3 Lego controller python bluetooth library based on bleak
 
+> NOTE: Intentionally long and specific name so BuWizz have rights to a more abstract concise named library
+
+
 <!--TOC-->
 
 - [buwizz-pro3-bluetooth-python](#buwizz-pro3-bluetooth-python)
