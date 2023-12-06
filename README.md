@@ -53,6 +53,8 @@ If you're not sure how to make changes or _if_ you should sink the time and effo
 # TODO
  - Get `bleak` to talk to BuWizz controller https://github.com/hbldh/bleak/blob/master/examples/uart_service.py
  - Setup a BLE Profile similar to what PyBricks has done https://github.com/pybricks/pybricksdev/blob/master/pybricksdev/ble/pybricks.py
+ - Also the Nordic UART Service (NUS) https://github.com/pybricks/pybricksdev/blob/master/pybricksdev/ble/nus.py
+ - Take inspiration from Lego Wire Protocol 3 LWP3 on how to read/write over UART https://github.com/pybricks/pybricksdev/blob/master/pybricksdev/ble/lwp3/messages.py
  - Get MKDocs docs to auto generate based on code API.
    - https://mkdocstrings.github.io/recipes/
    - MKDocs Drawio exporter https://github.com/LukeCarrier/mkdocs-drawio-exporter
