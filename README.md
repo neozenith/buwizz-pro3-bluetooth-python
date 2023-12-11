@@ -56,11 +56,5 @@ If you're not sure how to make changes or _if_ you should sink the time and effo
  - Also the Nordic UART Service (NUS) https://github.com/pybricks/pybricksdev/blob/master/pybricksdev/ble/nus.py
  - Take inspiration from Lego Wire Protocol 3 LWP3 on how to read/write over UART https://github.com/pybricks/pybricksdev/blob/master/pybricksdev/ble/lwp3/messages.py
  - Get MKDocs docs to auto generate based on code API.
-   - https://mkdocstrings.github.io/recipes/
-   - MKDocs Drawio exporter https://github.com/LukeCarrier/mkdocs-drawio-exporter
-   - Blogging Plugin https://github.com/liang2kl/mkdocs-blogging-plugin
-   - Add plotly charts https://github.com/haoda-li/mkdocs-plotly-plugin
-   - Integrate Jupyter Notebooks https://github.com/danielfrg/mkdocs-jupyter
-   - Embed revision date https://github.com/timvink/mkdocs-git-revision-date-localized-plugin
-   - Git authors plugin https://github.com/timvink/mkdocs-git-authors-plugin
-   - Embed Swagger docs https://github.com/bharel/mkdocs-render-swagger-plugin
+   - Investigate these https://facelessuser.github.io/pymdown-extensions/
+   

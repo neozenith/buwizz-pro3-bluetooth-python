@@ -1,9 +1,19 @@
 site_name: buwizz-pro3-bluetooth-python
+
 theme:
   name: material
+
 plugins:
-- search
-- mkdocstrings:
+- search  
+- git-authors
+- git-revision-date-localized
+- gen-files: # Generate distinct docs pages per source code file.
+    scripts:
+    - scripts/gen_ref_pages.py  
+- literate-nav:
+    nav_file: SUMMARY.md
+- section-index
+- mkdocstrings: # Generate documentation from source code.
     default_handler: python
     handlers:
       python:
@@ -22,3 +32,7 @@ plugins:
           show_signature: true
           separate_signature: true
           show_signature_annotations: true
+
+nav:
+# defer to gen-files + literate-nav
+- Code Reference: reference/  

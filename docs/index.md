@@ -1,4 +1,4 @@
-# BuWIzz Pro 3 Bluetooth Python SDK
+# BuWizz Pro 3 Bluetooth Python SDK
 
 BuWizz Pro 3 Lego controller python bluetooth library based on bleak
 
